@@ -74,7 +74,7 @@ question: {question}
 """
 
 
-user_api_key = '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'
+user_api_key = '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'
 uploaded_file = st.sidebar.file_uploader("upload", type="csv")
 
 if uploaded_file :
