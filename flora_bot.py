@@ -1,30 +1,15 @@
 import streamlit as st
-import pandas as pd
-import json
-from pathlib import Path
 from streamlit_chat import message
 from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
 from langchain.document_loaders.csv_loader import CSVLoader
-from langchain.document_loaders import JSONLoader
-from langchain.document_loaders import AirbyteJSONLoader
 from langchain.vectorstores import FAISS
 import tempfile
-from langchain import PromptTemplate, LLMChain
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    AIMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
-from langchain.schema import (
-    AIMessage,
-    HumanMessage,
-    SystemMessage
-)
+from langchain import PromptTemplate
+import os
 
+openai_api_key = os.environ.get('OPENAI_API_KEY')
 
 product_format = """
 
@@ -74,7 +59,6 @@ question: {question}
 """
 
 
-user_api_key = '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'
 uploaded_file = st.sidebar.file_uploader("upload", type="csv")
 
 if uploaded_file :
@@ -82,26 +66,27 @@ if uploaded_file :
         tmp_file.write(uploaded_file.getvalue())
         tmp_file_path = tmp_file.name
 
-    loader = CSVLoader(file_path=tmp_file_path, encoding="utf-8")
     # loader = AirbyteJSONLoader(file_path=tmp_file_path, encoding="utf-8")
         
     # loader = JSONLoader(
     #     file_path=tmp_file_path,
     #     jq_schema='algoliaProducts[]')
 
+
+    loader = CSVLoader(file_path=tmp_file_path, encoding="utf-8")
+
     data = loader.load()
 
     # data = pd.read_json(tmp_file_path)
     
     st.write(data)
-
-    embeddings = OpenAIEmbeddings(openai_api_key=user_api_key)
+    embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
     vectors = FAISS.from_documents(data, embeddings)
 
 
     custom_llm = ChatOpenAI(temperature=0,
                     model_name='gpt-3.5-turbo',
-                    openai_api_key=user_api_key)
+                    openai_api_key=openai_api_key)
     
     system_message_prompt = PromptTemplate(template=system_message, input_variables=['context', 'question'])
     
